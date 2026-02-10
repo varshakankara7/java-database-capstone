@@ -21,8 +21,11 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
+    # The feedback requires navigating into the backend directory
     - name: Compile with Maven
       run: mvn clean compile
-      
+      working-directory: app
+
     - name: Run Tests
       run: mvn test
+      working-directory: app
