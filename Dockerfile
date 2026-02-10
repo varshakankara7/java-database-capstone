@@ -1,15 +1,23 @@
-# Step 1: Use an official JDK runtime as a parent image
-FROM openjdk:17-jdk-slim
+# Stage 1: Build the application
+FROM maven:3.8.4-openjdk-17-slim AS build
+WORKDIR /build
 
-# Step 2: Set the working directory inside the container
+# Copy only the pom.xml and source code from the 'app' directory
+COPY app/pom.xml .
+COPY app/src ./src
+
+# Compile and package the application, skipping tests for speed
+RUN mvn clean package -DskipTests
+
+# Stage 2: Create the runtime image
+FROM openjdk:17-jdk-slim
 WORKDIR /app
 
-# Step 3: Copy the executable JAR file from the target directory to the container
-# Ensure you have run 'mvn clean package' to generate this file
-COPY target/healthcare-backend-0.0.1-SNAPSHOT.jar app.jar
+# Copy only the built JAR file from the 'build' stage
+COPY --from=build /build/target/*.jar app.jar
 
-# Step 4: Expose the port the app runs on (usually 8080 for Spring Boot)
+# Expose the application port
 EXPOSE 8080
 
-# Step 5: Run the JAR file
+# Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
